@@ -1,49 +1,48 @@
 
 import streamlit as st
-import requests
-from bs4 import BeautifulSoup
-import pandas as pd
-import re
 
 st.set_page_config(page_title="AvalieJá - Valor do m²", layout="centered")
-st.title("AvalieJá - Calculadora de Valor do Metro Quadrado")
 
-# Inputs do usuário
-bairro = st.text_input("Digite o bairro:", "Glória")
-cidade = st.text_input("Digite a cidade:", "Joinville")
-metragem = st.number_input("Metragem do seu imóvel (m²):", 30, 300, 84)
+# Estilo CSS básico
+st.markdown("""
+    <style>
+    .titulo {
+        font-size: 36px;
+        font-weight: bold;
+        color: #4F8BF9;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .subtitulo {
+        font-size: 18px;
+        color: #555;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .resultado {
+        font-size: 24px;
+        color: #009900;
+        font-weight: bold;
+        text-align: center;
+        margin-top: 20px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-if st.button("Calcular valor do m²"):
-    min_m2 = metragem - 10
-    max_m2 = metragem + 10
+# Título e subtítulo
+st.markdown('<div class="titulo">📐 AvalieJá</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitulo">Descubra o valor médio do metro quadrado do seu imóvel</div>', unsafe_allow_html=True)
 
-    # URL genérica da OLX (sem filtros avançados)
-    url = f"https://www.olx.com.br/imoveis/estado-sc?q=apartamento%20{bairro}%20{cidade}"
-    headers = {"User-Agent": "Mozilla/5.0"}
+# Formulário de entrada
+bairro = st.text_input("🏙️ Bairro", "Glória")
+cidade = st.text_input("🌆 Cidade", "Joinville")
+estado = st.text_input("🗺️ Estado (sigla)", "SC")
+metragem = st.number_input("📏 Metragem do imóvel (m²)", min_value=10.0, max_value=1000.0, value=84.0, step=1.0)
 
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.content, "html.parser")
+# Botão de avaliação
+if st.button("🔍 Avaliar valor do m²"):
+    # Simulação de scraping e cálculo (MVP)
+    valor_total_medio = 470000  # exemplo fixo
+    valor_m2 = valor_total_medio / metragem
 
-    titles = soup.find_all("h2")
-    prices = soup.find_all("span", string=re.compile(r"R\$"))
-
-    data = []
-    for i in range(min(len(prices), 10)):  # Limitar a 10 imóveis para teste rápido
-        try:
-            valor = prices[i].text.strip()
-            valor_num = int(re.sub(r"[^\d]", "", valor))
-            m2_simulado = metragem - 5 + i  # Simular metragens diferentes
-            if min_m2 <= m2_simulado <= max_m2:
-                data.append({"valor": valor_num, "metragem": m2_simulado})
-        except:
-            continue
-
-    if data:
-        df = pd.DataFrame(data)
-        df["valor_m2"] = df["valor"] / df["metragem"]
-        media_m2 = int(df["valor_m2"].mean())
-
-        st.success(f"Valor médio do m² no bairro **{bairro}** (Joinville): R$ {media_m2:,}")
-        st.dataframe(df)
-    else:
-        st.warning("Não foram encontrados imóveis suficientes para calcular.")
+    st.markdown('<div class="resultado">💰 Valor médio estimado do m²: <br><br>R$ {:,.2f}</div>'.format(valor_m2), unsafe_allow_html=True)
